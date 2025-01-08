@@ -203,3 +203,131 @@ def update(self):
                             main_menu()
                             return
             CLOCK.tick(60)
+
+def game_over_screen(self):
+        menu_running = True
+        selected_option = "play_again"
+
+        while menu_running:
+            self.draw()
+            overlay_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+            overlay_surface.fill((0, 0, 0, 150))
+            SCREEN.blit(overlay_surface, (0, 0))
+
+            border_rect = pygame.Rect(150, 150, 500, 300)
+            draw_rounded_rect(SCREEN, border_rect, CYAN, 20)
+
+            inner_rect = border_rect.inflate(-10, -10)
+            draw_rounded_rect(SCREEN, inner_rect, BLACK, 20)
+
+            font_game_over = pygame.font.SysFont(None, 75)
+            game_over_text = font_game_over.render("Game Over!", True, RED)
+            SCREEN.blit(game_over_text, (SCREEN_WIDTH // 2 - game_over_text.get_width() // 2, inner_rect.y + 40))
+
+            font_score = pygame.font.SysFont(None, 50)
+            score_text = font_score.render(f"Score: {self.score}", True, CYAN)
+            SCREEN.blit(score_text, (SCREEN_WIDTH // 2 - score_text.get_width() // 2, inner_rect.y + 110))
+
+            font_option = pygame.font.SysFont(None, 50)
+            play_again_color = YELLOW if selected_option == "play_again" else WHITE
+            exit_color = YELLOW if selected_option == "exit" else WHITE
+
+            play_again_text = font_option.render("Play Again", True, play_again_color)
+            exit_text = font_option.render("Exit", True, exit_color)
+
+            SCREEN.blit(play_again_text, (inner_rect.x + 50, inner_rect.y + 200))
+            SCREEN.blit(exit_text, (inner_rect.x + 350, inner_rect.y + 200))
+
+            pygame.display.update()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT:
+                        selected_option = "play_again"
+                    if event.key == pygame.K_RIGHT:
+                        selected_option = "exit"
+                    if event.key == pygame.K_RETURN:
+                        if selected_option == "play_again":
+                            menu_running = False
+                            game_loop(Game())  # Start new game
+                        elif selected_option == "exit":
+                            menu_running = False
+                            main_menu()  # Go back to main menu
+            CLOCK.tick(60)
+
+
+def main_menu():
+    menu_running = True
+    selected_option = "play"
+
+    while menu_running:
+        Road.draw()
+        overlay_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+        overlay_surface.fill((0, 0, 0, 150))
+        SCREEN.blit(overlay_surface, (0, 0))
+
+        border_rect = pygame.Rect(200, 150, 400, 350)
+        draw_rounded_rect(SCREEN, border_rect, CYAN, 20)
+
+        inner_rect = border_rect.inflate(-10, -10)
+        draw_rounded_rect(SCREEN, inner_rect, BLACK, 20)
+
+        font_title = pygame.font.SysFont(None, 75)
+        title_text = font_title.render("Motor Rush", True, CYAN)
+        SCREEN.blit(title_text, (SCREEN_WIDTH // 2 - title_text.get_width() // 2, inner_rect.y + 40))
+
+        font_option = pygame.font.SysFont(None, 50)
+        play_color = YELLOW if selected_option == "play" else WHITE
+        exit_color = YELLOW if selected_option == "exit" else WHITE
+        play_text = font_option.render("Play Game", True, play_color)
+        exit_text = font_option.render("Exit", True, exit_color)
+
+        SCREEN.blit(play_text, (SCREEN_WIDTH // 2 - play_text.get_width() // 2, inner_rect.y + 150))
+        SCREEN.blit(exit_text, (SCREEN_WIDTH // 2 - exit_text.get_width() // 2, inner_rect.y + 220))
+
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP or event.key == pygame.K_DOWN:
+                    selected_option = "play" if selected_option == "exit" else "exit"
+                if event.key == pygame.K_RETURN:
+                    if selected_option == "play":
+                        menu_running = False
+                        game_loop(Game())  # Start new game
+                    elif selected_option == "exit":
+                        pygame.quit()
+                        quit()
+        CLOCK.tick(60)
+
+
+def game_loop(game):
+    while game.running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game.running = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+                game.toggle_pause()
+        if game.paused:
+            game.pause_menu()
+            continue
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] and game.motor.x > 100:
+            game.motor.move("left")
+        if keys[pygame.K_RIGHT] and game.motor.x < SCREEN_WIDTH - 100 - MOTOR_WIDTH:
+            game.motor.move("right")
+        game.update()
+        game.handle_collision()
+        game.draw()
+        pygame.display.update()
+        CLOCK.tick(60)
+
+
+if __name__ == "__main__":
+    main_menu()
