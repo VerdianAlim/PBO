@@ -1,0 +1,114 @@
+import pygame
+import random
+
+# Inisialisasi Pygame
+pygame.init()
+
+# Konfigurasi layar dan warna
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Motor Rush: Avoid the Traffic")
+
+# Warna
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GRAY = (169, 169, 169)
+GREEN = (34, 139, 34)
+YELLOW = (255, 255, 51)
+CYAN = (0, 255, 255)
+
+# FPS Controller
+CLOCK = pygame.time.Clock()
+
+# Ukuran gambar
+MOTOR_WIDTH, MOTOR_HEIGHT = 50, 60
+CAR_WIDTH, CAR_HEIGHT = 50, 80
+
+# Gambar
+MOTOR_IMG = pygame.image.load("motor.png")
+CAR_IMG = pygame.image.load("car.png")
+MOTOR_IMG = pygame.transform.scale(MOTOR_IMG, (MOTOR_WIDTH, MOTOR_HEIGHT))
+CAR_IMG = pygame.transform.scale(CAR_IMG, (CAR_WIDTH, CAR_HEIGHT))
+
+
+# Fungsi untuk menggambar rectangle dengan sudut tumpul
+def draw_rounded_rect(surface, rect, color, corner_radius):
+    pygame.draw.rect(surface, color, rect, border_radius=corner_radius)
+
+
+# Kelas Motor
+class Motor:
+    def __init__(self, x, y, speed):
+        self.x = x
+        self.y = y
+        self.speed = speed
+
+    def move(self, direction):
+        if direction == "left":
+            self.x -= self.speed
+        elif direction == "right":
+            self.x += self.speed
+
+    def draw(self):
+        SCREEN.blit(MOTOR_IMG, (self.x, self.y))
+
+    def get_position(self):
+        return self.x, self.y, MOTOR_WIDTH, MOTOR_HEIGHT
+
+
+# Kelas Car
+class Car:
+    def __init__(self, x, y, speed):
+        self.x = x
+        self.y = y
+        self.speed = speed
+
+    def move(self):
+        self.y += self.speed
+
+    def reset_position(self):
+        self.y = -CAR_HEIGHT
+        self.x = random.randint(100, SCREEN_WIDTH - 100 - CAR_WIDTH)
+
+    def draw(self):
+        SCREEN.blit(CAR_IMG, (self.x, self.y))
+
+    def get_position(self):
+        return self.x, self.y, CAR_WIDTH, CAR_HEIGHT
+
+
+# Kelas Road
+class Road:
+    @staticmethod
+    def draw():
+        SCREEN.fill(GRAY)
+        pygame.draw.rect(SCREEN, WHITE, (100, 0, SCREEN_WIDTH - 200, SCREEN_HEIGHT))  # Jalur utama
+        pygame.draw.line(SCREEN, BLACK, (100, 0), (100, SCREEN_HEIGHT), 10)  # Pembatas kiri
+        pygame.draw.line(SCREEN, BLACK, (700, 0), (700, SCREEN_HEIGHT), 10)  # Pembatas kanan
+        for y in range(0, SCREEN_HEIGHT, 40):
+            pygame.draw.rect(SCREEN, WHITE, (395, y, 10, 30))  # Garis putus-putus
+
+
+# Kelas Game
+class Game:
+    def __init__(self):
+        self.motor = Motor(SCREEN_WIDTH // 2 - MOTOR_WIDTH // 2, SCREEN_HEIGHT - MOTOR_HEIGHT - 10, 10)
+        self.cars = [Car(random.randint(100, SCREEN_WIDTH - 100 - CAR_WIDTH), -CAR_HEIGHT, 5)]
+        self.score = 0
+        self.difficulty_timer = 0
+        self.running = True
+        self.paused = False
+
+    def add_car(self):
+        self.cars.append(Car(random.randint(100, SCREEN_WIDTH - 100 - CAR_WIDTH), -CAR_HEIGHT, random.randint(4, 7)))
+
+    def handle_collision(self):
+        motor_x, motor_y, motor_width, motor_height = self.motor.get_position()
+        for car in self.cars:
+            car_x, car_y, car_width, car_height = car.get_position()
+            if (motor_x < car_x + car_width and motor_x + motor_width > car_x and
+                    motor_y < car_y + car_height and motor_y + motor_height > car_y):
+                self.running = False
+                self.game_over_screen()
