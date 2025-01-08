@@ -112,3 +112,94 @@ class Game:
                     motor_y < car_y + car_height and motor_y + motor_height > car_y):
                 self.running = False
                 self.game_over_screen()
+def update(self):
+        for car in self.cars:
+            car.move()
+            if car.y > SCREEN_HEIGHT:
+                car.reset_position()
+                self.score += 1
+
+        self.difficulty_timer += 1
+        if self.difficulty_timer > 300:
+            self.add_car()
+            self.difficulty_timer = 0
+
+    def draw(self):
+        Road.draw()
+        self.motor.draw()
+        for car in self.cars:
+            car.draw()
+        font = pygame.font.SysFont(None, 27)
+        score_text = font.render(f"Score: {self.score}", True, YELLOW)
+        SCREEN.blit(score_text, (10, 10))
+
+    def toggle_pause(self):
+        self.paused = not self.paused
+
+    def pause_menu(self):
+        menu_running = True
+        selected_option = "resume"
+
+        while menu_running:
+            self.draw()
+            overlay_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+            overlay_surface.fill((0, 0, 0, 150))
+            SCREEN.blit(overlay_surface, (0, 0))
+
+            border_rect = pygame.Rect(200, 150, 400, 350)
+            draw_rounded_rect(SCREEN, border_rect, CYAN, 20)
+
+            inner_rect = border_rect.inflate(-10, -10)
+            draw_rounded_rect(SCREEN, inner_rect, BLACK, 20)
+
+            font_score = pygame.font.SysFont(None, 60)
+            score_text = font_score.render(f"Score: {self.score}", True, YELLOW)
+            SCREEN.blit(score_text, (SCREEN_WIDTH // 2 - score_text.get_width() // 2, inner_rect.y + 40))
+
+            font_option = pygame.font.SysFont(None, 50)
+            resume_color = YELLOW if selected_option == "resume" else WHITE
+            restart_color = YELLOW if selected_option == "restart" else WHITE
+            exit_color = YELLOW if selected_option == "exit" else WHITE
+
+            resume_text = font_option.render("Resume", True, resume_color)
+            restart_text = font_option.render("Restart", True, restart_color)
+            exit_text = font_option.render("Exit", True, exit_color)
+
+            SCREEN.blit(resume_text, (SCREEN_WIDTH // 2 - resume_text.get_width() // 2, inner_rect.y + 150))
+            SCREEN.blit(restart_text, (SCREEN_WIDTH // 2 - restart_text.get_width() // 2, inner_rect.y + 220))
+            SCREEN.blit(exit_text, (SCREEN_WIDTH // 2 - exit_text.get_width() // 2, inner_rect.y + 290))
+
+            pygame.display.update()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        if selected_option == "resume":
+                            selected_option = "exit"
+                        elif selected_option == "restart":
+                            selected_option = "resume"
+                        elif selected_option == "exit":
+                            selected_option = "restart"
+                    if event.key == pygame.K_DOWN:
+                        if selected_option == "resume":
+                            selected_option = "restart"
+                        elif selected_option == "restart":
+                            selected_option = "exit"
+                        elif selected_option == "exit":
+                            selected_option = "resume"
+                    if event.key == pygame.K_RETURN:
+                        if selected_option == "resume":
+                            self.paused = False
+                            menu_running = False
+                        elif selected_option == "restart":
+                            menu_running = False
+                            self.__init__()
+                            game_loop(self)
+                        elif selected_option == "exit":
+                            menu_running = False
+                            main_menu()
+                            return
+            CLOCK.tick(60)
